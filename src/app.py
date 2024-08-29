@@ -25,30 +25,50 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
+
 @app.route('/members', methods=['GET'])
 def get_members():
-    members_all = jackson_family.get_all_members()
-    json_text = jsonify(members_all), 200
-    return json_text
+    try:
+        members = jackson_family.get_all_members()
+        return jsonify(members), 200
+        
+    except Exception as e:
+        return jsonify({"error": "Internal error", "message": str(e)}), 500
 
 @app.route("/member", methods=["POST"])
 def add_member():
-    request_body = request.json
-    jackson_family.add_member(request_body)
-    return jsonify({"msg": "Miembro añadido"}), 200
+    try:
+        member = request.json
+        if not member:
+            return jsonify({"msg": "Datos de miembro inválidos"}), 400
+            
+        new_member = jackson_family.add_member(member)
+        return jsonify(new_member), 200
+        
+    except Exception as e:
+        return jsonify({"error": "Internal error", "message": str(e)}), 500
 
 @app.route("/member/<int:id>", methods=["DELETE"])
 def delete_member(id):
-    member_eraser = jackson_family.delete_member(id)
-    return jsonify(member_eraser), 200
-    
+    try:
+        result = jackson_family.delete_member(id)
+        if result["done"]:
+            return jsonify(result), 200
+        return jsonify({"msg": "Miembro no encontrado"}), 404
+        
+    except Exception as e:
+        return jsonify({"error": "Internal error", "message": str(e)}), 500
 
 @app.route("/member/<int:id>", methods=["GET"])
 def get_member(id):
-    member = jackson_family.get_member(id)
-    json_text = jsonify(member), 200
-    return json_text
-
+    try:
+        member = jackson_family.get_member(id)
+        if member:
+            return jsonify(member), 200
+        return jsonify({"msg": "Miembro no encontrado"}), 404
+        
+    except Exception as e:
+        return jsonify({"error": "Internal error", "message": str(e)}), 500
 
     # return jsonify(response_body), 200
 
